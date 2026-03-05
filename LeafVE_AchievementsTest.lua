@@ -92,6 +92,8 @@ local function EnsureDB()
   if not LeafVE_AchTest_DB.progressCounters then LeafVE_AchTest_DB.progressCounters = {} end
   if not LeafVE_AchTest_DB.completedQuests then LeafVE_AchTest_DB.completedQuests = {} end
   if not LeafVE_AchTest_DB.peakGold then LeafVE_AchTest_DB.peakGold = {} end
+  if not LeafVE_AchTest_DB.goldEarnedTotal then LeafVE_AchTest_DB.goldEarnedTotal = {} end
+  if not LeafVE_AchTest_DB.goldLastSeen then LeafVE_AchTest_DB.goldLastSeen = {} end
 end
 
 
@@ -573,6 +575,25 @@ local ACHIEVEMENTS = {
   pvp_hk_50={id="pvp_hk_50",name="Skirmisher",desc="Earn 50 honorable kills",category="PvP",points=10,icon="Interface\\Icons\\INV_Sword_27"},
   pvp_hk_100={id="pvp_hk_100",name="Soldier",desc="Earn 100 honorable kills",category="PvP",points=10,icon="Interface\\Icons\\INV_Sword_27"},
   pvp_hk_5000={id="pvp_hk_5000",name="Warlord",desc="Earn 5000 honorable kills",category="PvP",points=100,icon="Interface\\Icons\\INV_Sword_62"},
+  pvp_bg_win_1={id="pvp_bg_win_1",name="First Victory",desc="Win your first battleground",category="PvP",points=5,icon="Interface\\Icons\\INV_BannerPVP_02"},
+  pvp_bg_win_10={id="pvp_bg_win_10",name="Battleground Veteran",desc="Win 10 battlegrounds",category="PvP",points=20,icon="Interface\\Icons\\INV_BannerPVP_02"},
+  pvp_bg_win_50={id="pvp_bg_win_50",name="Battleground Champion",desc="Win 50 battlegrounds",category="PvP",points=50,icon="Interface\\Icons\\INV_BannerPVP_02"},
+  pvp_wsg_win_10={id="pvp_wsg_win_10",name="Warsong Victor",desc="Win 10 Warsong Gulch matches",category="PvP",points=25,icon="Interface\\Icons\\INV_Misc_Rune_07"},
+  pvp_ab_win_10={id="pvp_ab_win_10",name="Arathi Victor",desc="Win 10 Arathi Basin matches",category="PvP",points=25,icon="Interface\\Icons\\INV_BannerPVP_01"},
+  pvp_av_win_10={id="pvp_av_win_10",name="Alterac Victor",desc="Win 10 Alterac Valley matches",category="PvP",points=25,icon="Interface\\Icons\\INV_BannerPVP_03"},
+
+  -- Reputation
+  reputation_exalted_1={id="reputation_exalted_1",name="Well Respected",desc="Reach Exalted with 1 faction",category="Reputation",points=15,icon="Interface\\Icons\\INV_Misc_Note_06"},
+  reputation_exalted_5={id="reputation_exalted_5",name="Diplomat",desc="Reach Exalted with 5 factions",category="Reputation",points=50,icon="Interface\\Icons\\INV_Misc_Note_06"},
+  reputation_exalted_10={id="reputation_exalted_10",name="Ambassador",desc="Reach Exalted with 10 factions",category="Reputation",points=100,icon="Interface\\Icons\\INV_Misc_Note_06"},
+
+  -- Auction House Activity
+  gold_ah_visit_10={id="gold_ah_visit_10",name="Window Shopper",desc="Visit the Auction House 10 times",category="Gold",points=10,icon="Interface\\Icons\\INV_Misc_Coin_01"},
+  gold_ah_visit_100={id="gold_ah_visit_100",name="Auction Regular",desc="Visit the Auction House 100 times",category="Gold",points=25,icon="Interface\\Icons\\INV_Misc_Coin_01"},
+  gold_ah_post_10={id="gold_ah_post_10",name="Market Seller",desc="Post 10 auctions",category="Gold",points=15,icon="Interface\\Icons\\INV_Misc_Coin_06"},
+  gold_ah_post_100={id="gold_ah_post_100",name="Market Mogul",desc="Post 100 auctions",category="Gold",points=50,icon="Interface\\Icons\\INV_Misc_Coin_17"},
+  gold_ah_bid_10={id="gold_ah_bid_10",name="Auction Bidder",desc="Place 10 auction bids",category="Gold",points=10,icon="Interface\\Icons\\INV_Misc_Coin_03"},
+  gold_ah_bid_100={id="gold_ah_bid_100",name="Auction Financier",desc="Place 100 auction bids",category="Gold",points=30,icon="Interface\\Icons\\INV_Misc_Coin_17"},
 
   -- Elite Achievements
   elite_cthun_5x={id="elite_cthun_5x",name="Ahn'Qiraj Conqueror",desc="Defeat C'Thun 5 times",category="Elite",points=400,icon="Interface\\Icons\\Spell_Shadow_Charm"},
@@ -589,6 +610,8 @@ local ACHIEVEMENTS = {
   elite_all_dungeons_complete={id="elite_all_dungeons_complete",name="Dungeon Completionist",desc="Complete every Classic 5-man dungeon at least once",category="Elite",points=400,icon="Interface\\Icons\\INV_Chest_Cloth_17",criteria_type="dungeon_meta"},
   elite_50_dungeons={id="elite_50_dungeons",name="Dungeon Crawler",desc="Complete 50 dungeon runs",category="Elite",points=150,icon="Interface\\Icons\\INV_Misc_Key_14"},
   elite_100_dungeons={id="elite_100_dungeons",name="Dungeon Veteran",desc="Complete 100 dungeon runs",category="Elite",points=250,icon="Interface\\Icons\\INV_Misc_Key_15"},
+  elite_250_dungeons={id="elite_250_dungeons",name="Dungeon Master",desc="Complete 250 dungeon runs",category="Elite",points=350,icon="Interface\\Icons\\INV_Misc_Key_15"},
+  elite_500_dungeons={id="elite_500_dungeons",name="Dungeon Grandmaster",desc="Complete 500 dungeon runs",category="Elite",points=500,icon="Interface\\Icons\\INV_Misc_Key_15"},
   elite_250_bosses={id="elite_250_bosses",name="Elite Slayer",desc="Kill 250 total bosses",category="Elite",points=200,icon="Interface\\Icons\\INV_Misc_Trophy_Gold"},
   elite_rag_10x={id="elite_rag_10x",name="Flame Conqueror",desc="Defeat Ragnaros 10 times",category="Elite",points=250,icon="Interface\\Icons\\Spell_Fire_LavaSpawn"},
   elite_kt_5x={id="elite_kt_5x",name="Frost Conqueror",desc="Defeat Kel'Thuzad 5 times",category="Elite",points=500,icon="Interface\\Icons\\Spell_Shadow_SoulGem"},
@@ -599,6 +622,8 @@ local ACHIEVEMENTS = {
   elite_all_raids_complete={id="elite_all_raids_complete",name="Raid Completionist",desc="Complete every Classic raid at least once",category="Elite",points=500,icon="Interface\\Icons\\Spell_Holy_Resurrection",criteria_type="raid_meta"},
   elite_25_raids={id="elite_25_raids",name="Raid Initiate",desc="Complete 25 raid runs",category="Elite",points=200,icon="Interface\\Icons\\INV_Misc_Ribbon_01"},
   elite_50_raids={id="elite_50_raids",name="Raid Regular",desc="Complete 50 raid runs",category="Elite",points=300,icon="Interface\\Icons\\INV_Misc_Ribbon_01"},
+  elite_100_raids={id="elite_100_raids",name="Raid Veteran",desc="Complete 100 raid runs",category="Elite",points=450,icon="Interface\\Icons\\INV_Misc_Ribbon_01"},
+  elite_250_raids={id="elite_250_raids",name="Raid Legend",desc="Complete 250 raid runs",category="Elite",points=650,icon="Interface\\Icons\\INV_Misc_Ribbon_01"},
   elite_kt_3x={id="elite_kt_3x",name="Scourge Slayer",desc="Defeat Kel'Thuzad 3 times",category="Elite",points=300,icon="Interface\\Icons\\Spell_Fire_Incinerate"},
   elite_hakkar_5x={id="elite_hakkar_5x",name="Soulflayer's End",desc="Defeat Hakkar 5 times",category="Elite",points=200,icon="Interface\\Icons\\Spell_Shadow_ShadowWordPain"},
 
@@ -1171,6 +1196,12 @@ local ACHIEVEMENT_PROGRESS_DEF = {
   pvp_duel_25  = {counter="duels", goal=25},
   pvp_duel_50  = {counter="duels", goal=50},
   pvp_duel_100 = {counter="duels", goal=100},
+  pvp_bg_win_1  = {counter="bgWins", goal=1},
+  pvp_bg_win_10 = {counter="bgWins", goal=10},
+  pvp_bg_win_50 = {counter="bgWins", goal=50},
+  pvp_wsg_win_10 = {counter="bgWinsWSG", goal=10},
+  pvp_ab_win_10  = {counter="bgWinsAB", goal=10},
+  pvp_av_win_10  = {counter="bgWinsAV", goal=10},
   -- Gold: read live from the API
   gold_10   = {api="gold", goal=10},
   gold_100  = {api="gold", goal=100},
@@ -1225,8 +1256,12 @@ local ACHIEVEMENT_PROGRESS_DEF = {
   -- Dungeon and raid run counts
   elite_50_dungeons  = {counter="dungeonRuns", goal=50},
   elite_100_dungeons = {counter="dungeonRuns", goal=100},
+  elite_250_dungeons = {counter="dungeonRuns", goal=250},
+  elite_500_dungeons = {counter="dungeonRuns", goal=500},
   elite_25_raids     = {counter="raidRuns",    goal=25},
   elite_50_raids     = {counter="raidRuns",    goal=50},
+  elite_100_raids    = {counter="raidRuns",    goal=100},
+  elite_250_raids    = {counter="raidRuns",    goal=250},
   -- Resurrections tracked via PLAYER_ALIVE
   casual_resurrect_10 = {counter="resurrections", goal=10},
   casual_resurrect_50 = {counter="resurrections", goal=50},
@@ -1242,6 +1277,17 @@ local ACHIEVEMENT_PROGRESS_DEF = {
   casual_loot_5000 = {counter="loots", goal=5000},
   -- Trades tracked via TRADE_CLOSED
   casual_trade_10 = {counter="trades", goal=10},
+  -- Auction House activity
+  gold_ah_visit_10  = {counter="ahVisits", goal=10},
+  gold_ah_visit_100 = {counter="ahVisits", goal=100},
+  gold_ah_post_10   = {counter="ahPosts", goal=10},
+  gold_ah_post_100  = {counter="ahPosts", goal=100},
+  gold_ah_bid_10    = {counter="ahBids", goal=10},
+  gold_ah_bid_100   = {counter="ahBids", goal=100},
+  -- Reputation milestones (tracked via UPDATE_FACTION)
+  reputation_exalted_1  = {counter="exaltedFactions", goal=1},
+  reputation_exalted_5  = {counter="exaltedFactions", goal=5},
+  reputation_exalted_10 = {counter="exaltedFactions", goal=10},
   -- Generic kill milestones tracked via CHAT_MSG_COMBAT_HOSTILE_DEATH (player or party/raid member kill)
   kill_01    = {counter="genericKills", goal=1},
   kill_100   = {counter="genericKills", goal=100},
@@ -1261,9 +1307,14 @@ local function GetAchievementProgress(me, achId)
   if def.api == "hk" then
     current = (GetPVPLifetimeHonorableKills and GetPVPLifetimeHonorableKills()) or 0
   elseif def.api == "gold" then
-    local peak = (me and LeafVE_AchTest_DB and LeafVE_AchTest_DB.peakGold and LeafVE_AchTest_DB.peakGold[me]) or 0
     local cur = math.floor((GetMoney and GetMoney() or 0) / 10000)
-    current = math.max(peak, cur)
+    local total = (me and LeafVE_AchTest_DB and LeafVE_AchTest_DB.goldEarnedTotal and LeafVE_AchTest_DB.goldEarnedTotal[me]) or 0
+    local last = (me and LeafVE_AchTest_DB and LeafVE_AchTest_DB.goldLastSeen and LeafVE_AchTest_DB.goldLastSeen[me])
+    local peak = (me and LeafVE_AchTest_DB and LeafVE_AchTest_DB.peakGold and LeafVE_AchTest_DB.peakGold[me]) or 0
+    if total < peak then total = peak end -- migrate old progress safely
+    if total == 0 and cur > 0 then total = cur end -- initialize from current wallet
+    if last and cur > last then total = total + (cur - last) end
+    current = total
   elseif def.api == "quests" then
     -- Prefer the server-side total (available via GetNumQuestsCompleted in Turtle WoW)
     if GetNumQuestsCompleted then
@@ -1338,6 +1389,127 @@ function LeafVE_AchTest:CheckPvPRankAchievements(silent)
   if not UnitPVPRank then return end
   local rank = UnitPVPRank("player") or 0
   if rank >= 14 then self:AwardAchievement("elite_pvp_rank_14", silent) end
+end
+
+local function CountExaltedFactions()
+  if not GetNumFactions or not GetFactionInfo then return 0 end
+
+  -- Expand collapsed headers so we can count all factions reliably.
+  local safety = 0
+  local changed = true
+  while changed and safety < 20 do
+    changed = false
+    safety = safety + 1
+    local n = GetNumFactions()
+    for i = 1, n do
+      local _, _, _, _, _, _, _, _, isHeader, isCollapsed = GetFactionInfo(i)
+      if isHeader and isCollapsed and ExpandFactionHeader then
+        ExpandFactionHeader(i)
+        changed = true
+      end
+    end
+  end
+
+  local exalted = 0
+  for i = 1, (GetNumFactions() or 0) do
+    local _, _, standingID, _, _, _, _, _, isHeader = GetFactionInfo(i)
+    if not isHeader and standingID and standingID >= 8 then
+      exalted = exalted + 1
+    end
+  end
+  return exalted
+end
+
+function LeafVE_AchTest:CheckReputationAchievements(silent)
+  local me = ShortName(UnitName("player"))
+  if not me then return end
+  EnsureDB()
+  if not LeafVE_AchTest_DB.progressCounters[me] then
+    LeafVE_AchTest_DB.progressCounters[me] = {}
+  end
+  local exalted = CountExaltedFactions()
+  LeafVE_AchTest_DB.progressCounters[me].exaltedFactions = exalted
+
+  if exalted >= 1  then self:AwardAchievement("reputation_exalted_1", silent) end
+  if exalted >= 5  then self:AwardAchievement("reputation_exalted_5", silent) end
+  if exalted >= 10 then self:AwardAchievement("reputation_exalted_10", silent) end
+end
+
+local function CheckBattlegroundAchievementsForPlayer(me, silent)
+  EnsureDB()
+  local pc = LeafVE_AchTest_DB.progressCounters
+  local p = pc[me] or {}
+
+  local wins = p.bgWins or 0
+  if wins >= 1  then LeafVE_AchTest:AwardAchievement("pvp_bg_win_1", silent) end
+  if wins >= 10 then LeafVE_AchTest:AwardAchievement("pvp_bg_win_10", silent) end
+  if wins >= 50 then LeafVE_AchTest:AwardAchievement("pvp_bg_win_50", silent) end
+
+  if (p.bgWinsWSG or 0) >= 10 then LeafVE_AchTest:AwardAchievement("pvp_wsg_win_10", silent) end
+  if (p.bgWinsAB or 0)  >= 10 then LeafVE_AchTest:AwardAchievement("pvp_ab_win_10", silent) end
+  if (p.bgWinsAV or 0)  >= 10 then LeafVE_AchTest:AwardAchievement("pvp_av_win_10", silent) end
+end
+
+function LeafVE_AchTest:CheckBattlegroundAchievements(silent)
+  local me = ShortName(UnitName("player"))
+  if not me then return end
+  CheckBattlegroundAchievementsForPlayer(me, silent)
+end
+
+function LeafVE_AchTest:HandleBattlegroundSystemMessage(evt, msg)
+  local me = ShortName(UnitName("player"))
+  if not me then return end
+  local faction = UnitFactionGroup and UnitFactionGroup("player") or nil
+  local isWin = false
+
+  if evt == "CHAT_MSG_BG_SYSTEM_ALLIANCE" then
+    isWin = (faction == "Alliance")
+  elseif evt == "CHAT_MSG_BG_SYSTEM_HORDE" then
+    isWin = (faction == "Horde")
+  elseif evt == "CHAT_MSG_BG_SYSTEM_NEUTRAL" then
+    local lower = string.lower(msg or "")
+    if faction == "Alliance" then
+      isWin = string.find(lower, "alliance") and (string.find(lower, "wins") or string.find(lower, "victory"))
+    elseif faction == "Horde" then
+      isWin = string.find(lower, "horde") and (string.find(lower, "wins") or string.find(lower, "victory"))
+    end
+  end
+
+  if not isWin then return end
+
+  IncrCounter(me, "bgWins")
+  local lower = string.lower(msg or "")
+  if string.find(lower, "warsong gulch") then
+    IncrCounter(me, "bgWinsWSG")
+  elseif string.find(lower, "arathi basin") then
+    IncrCounter(me, "bgWinsAB")
+  elseif string.find(lower, "alterac valley") then
+    IncrCounter(me, "bgWinsAV")
+  end
+  CheckBattlegroundAchievementsForPlayer(me)
+end
+
+local function CheckAuctionHouseAchievementsForPlayer(me, silent)
+  EnsureDB()
+  local p = LeafVE_AchTest_DB.progressCounters[me] or {}
+
+  local visits = p.ahVisits or 0
+  if visits >= 10  then LeafVE_AchTest:AwardAchievement("gold_ah_visit_10", silent) end
+  if visits >= 100 then LeafVE_AchTest:AwardAchievement("gold_ah_visit_100", silent) end
+
+  local posts = p.ahPosts or 0
+  if posts >= 10  then LeafVE_AchTest:AwardAchievement("gold_ah_post_10", silent) end
+  if posts >= 100 then LeafVE_AchTest:AwardAchievement("gold_ah_post_100", silent) end
+
+  local bids = p.ahBids or 0
+  if bids >= 10  then LeafVE_AchTest:AwardAchievement("gold_ah_bid_10", silent) end
+  if bids >= 100 then LeafVE_AchTest:AwardAchievement("gold_ah_bid_100", silent) end
+end
+
+function LeafVE_AchTest:CheckAuctionHouseAchievements(silent)
+  local me = ShortName(UnitName("player"))
+  if not me then return end
+  CheckAuctionHouseAchievementsForPlayer(me, silent)
 end
 
 -- ==========================================
@@ -1757,22 +1929,62 @@ function LeafVE_AchTest:CheckLevelAchievements(silent)
   if level >= 60 then self:AwardAchievement("lvl_60",          silent) end
 end
 
+local function UpdateLifetimeGoldForPlayer(me)
+  EnsureDB()
+  if not me then return 0 end
+
+  local current = math.floor((GetMoney and GetMoney() or 0) / 10000)
+  local total = LeafVE_AchTest_DB.goldEarnedTotal[me] or 0
+  local last = LeafVE_AchTest_DB.goldLastSeen[me]
+  local peak = LeafVE_AchTest_DB.peakGold[me] or 0
+
+  -- Backward compatibility with old peak-wallet tracking.
+  if total < peak then total = peak end
+  if total == 0 and current > 0 then total = current end
+
+  -- Lifetime accumulation: only add positive deltas from last seen wallet value.
+  if last ~= nil and current > last then
+    total = total + (current - last)
+  end
+
+  LeafVE_AchTest_DB.goldLastSeen[me] = current
+  LeafVE_AchTest_DB.goldEarnedTotal[me] = total
+
+  if current > peak then
+    LeafVE_AchTest_DB.peakGold[me] = current
+  end
+
+  return total
+end
+
 function LeafVE_AchTest:CheckGoldAchievements(silent)
   local me = ShortName(UnitName("player"))
   if not me then return end
+  local earned = UpdateLifetimeGoldForPlayer(me)
+  if earned >= 10   then self:AwardAchievement("gold_10",   silent) end
+  if earned >= 100  then self:AwardAchievement("gold_100",  silent) end
+  if earned >= 500  then self:AwardAchievement("gold_500",  silent) end
+  if earned >= 1000 then self:AwardAchievement("gold_1000", silent) end
+  if earned >= 5000 then self:AwardAchievement("gold_5000", silent) end
+end
+
+function LeafVE_AchTest:CheckRunMilestoneAchievements(silent)
+  local me = ShortName(UnitName("player"))
+  if not me then return end
   EnsureDB()
-  local current = math.floor((GetMoney and GetMoney() or 0) / 10000)
-  -- Update peak gold: only ever goes up, so spending gold never resets progress
-  local peak = LeafVE_AchTest_DB.peakGold[me] or 0
-  if current > peak then
-    peak = current
-    LeafVE_AchTest_DB.peakGold[me] = peak
-  end
-  if peak >= 10   then self:AwardAchievement("gold_10",   silent) end
-  if peak >= 100  then self:AwardAchievement("gold_100",  silent) end
-  if peak >= 500  then self:AwardAchievement("gold_500",  silent) end
-  if peak >= 1000 then self:AwardAchievement("gold_1000", silent) end
-  if peak >= 5000 then self:AwardAchievement("gold_5000", silent) end
+  local p = LeafVE_AchTest_DB.progressCounters[me] or {}
+  local dungeonRuns = p.dungeonRuns or 0
+  local raidRuns = p.raidRuns or 0
+
+  if dungeonRuns >= 50  then self:AwardAchievement("elite_50_dungeons", silent) end
+  if dungeonRuns >= 100 then self:AwardAchievement("elite_100_dungeons", silent) end
+  if dungeonRuns >= 250 then self:AwardAchievement("elite_250_dungeons", silent) end
+  if dungeonRuns >= 500 then self:AwardAchievement("elite_500_dungeons", silent) end
+
+  if raidRuns >= 25  then self:AwardAchievement("elite_25_raids", silent) end
+  if raidRuns >= 50  then self:AwardAchievement("elite_50_raids", silent) end
+  if raidRuns >= 100 then self:AwardAchievement("elite_100_raids", silent) end
+  if raidRuns >= 250 then self:AwardAchievement("elite_250_raids", silent) end
 end
 
 LeafVE_AchTest.UI = {}
@@ -1911,10 +2123,12 @@ function LeafVE_AchTest:RecordDungeonBoss(bossName)
       if allDone then
         self:AwardAchievement(achId)
         -- Count completed dungeon runs for run-count achievements
-        local runTotal = IncrCounter(me, "dungeonRuns")
-        if runTotal >= 50  then self:AwardAchievement("elite_50_dungeons")  end
-        if runTotal >= 100 then self:AwardAchievement("elite_100_dungeons") end
-        self:CheckMetaAchievements()
+    local runTotal = IncrCounter(me, "dungeonRuns")
+    if runTotal >= 50  then self:AwardAchievement("elite_50_dungeons")  end
+    if runTotal >= 100 then self:AwardAchievement("elite_100_dungeons") end
+    if runTotal >= 250 then self:AwardAchievement("elite_250_dungeons") end
+    if runTotal >= 500 then self:AwardAchievement("elite_500_dungeons") end
+    self:CheckMetaAchievements()
       end
     end
   end
@@ -1941,10 +2155,12 @@ function LeafVE_AchTest:RecordRaidBoss(bossName)
       if allDone then
         self:AwardAchievement(achId)
         -- Count completed raid runs for run-count achievements
-        local runTotal = IncrCounter(me, "raidRuns")
-        if runTotal >= 25 then self:AwardAchievement("elite_25_raids") end
-        if runTotal >= 50 then self:AwardAchievement("elite_50_raids") end
-        self:CheckMetaAchievements()
+    local runTotal = IncrCounter(me, "raidRuns")
+    if runTotal >= 25 then self:AwardAchievement("elite_25_raids") end
+    if runTotal >= 50 then self:AwardAchievement("elite_50_raids") end
+    if runTotal >= 100 then self:AwardAchievement("elite_100_raids") end
+    if runTotal >= 250 then self:AwardAchievement("elite_250_raids") end
+    self:CheckMetaAchievements()
       end
     end
   end
@@ -2188,7 +2404,7 @@ local ACH_POOL  = 14
 -- Create one unstyled achievement row frame attached to `parent`.
 local function CreateAchievementRow(parent)
   local frame = CreateFrame("Frame", nil, parent)
-  frame:SetWidth(680)
+  frame:SetWidth(690)
   frame:SetHeight(80)
   frame:SetBackdrop({
     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -2196,13 +2412,13 @@ local function CreateAchievementRow(parent)
     tile = true, tileSize = 16, edgeSize = 8,
     insets = {left = 2, right = 2, top = 2, bottom = 2}
   })
-  frame:SetBackdropColor(0.11, 0.10, 0.09, 0.90)
+  frame:SetBackdropColor(0.08, 0.07, 0.06, 0.96)
   frame:SetBackdropBorderColor(0.34, 0.28, 0.20, 0.92)
   local rowBg = frame:CreateTexture(nil, "BACKGROUND")
   rowBg:SetPoint("TOPLEFT", frame, "TOPLEFT", 2, -2)
   rowBg:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -2, 2)
   rowBg:SetTexture(TEX.parchmentH)
-  rowBg:SetVertexColor(0.95, 0.95, 0.95, 0.82)
+  rowBg:SetVertexColor(0.92, 0.90, 0.86, 0.94)
   frame.rowBg = rowBg
   local icon = frame:CreateTexture(nil, "ARTWORK")
   icon:SetWidth(48)
@@ -2402,8 +2618,8 @@ function LeafVE_AchTest.UI:Build()
   local f = CreateFrame("Frame", "LeafVE_AchTestFrame", UIParent)
   self.frame = f
   f:SetPoint("CENTER", 0, 0)
-  f:SetWidth(900)
-  f:SetHeight(620)
+  f:SetWidth(930)
+  f:SetHeight(640)
   f:EnableMouse(true)
   f:SetMovable(true)
   f:RegisterForDrag("LeftButton")
@@ -2422,7 +2638,7 @@ function LeafVE_AchTest.UI:Build()
   local grad = f:CreateTexture(nil, "BACKGROUND")
   grad:SetAllPoints(f)
   grad:SetTexture(TEX.shadow)
-  grad:SetVertexColor(1, 1, 1, 0.9)
+  grad:SetVertexColor(1, 1, 1, 0.98)
   
   local header = CreateFrame("Frame", nil, f)
   header:SetPoint("TOPLEFT", f, "TOPLEFT", 4, -4)
@@ -2555,6 +2771,8 @@ function LeafVE_AchTest.UI:Build()
     LeafVE_AchTest_DB.raidProgress    = {}
     LeafVE_AchTest_DB.completedQuests = {}
     LeafVE_AchTest_DB.peakGold        = {}
+    LeafVE_AchTest_DB.goldEarnedTotal = {}
+    LeafVE_AchTest_DB.goldLastSeen    = {}
     Print("Reset complete!")
     LeafVE_AchTest.UI:Refresh()
   end)
@@ -2783,7 +3001,7 @@ function LeafVE_AchTest.UI:Build()
     local hi = btn:CreateTexture(nil, "BACKGROUND")
     hi:SetAllPoints(btn)
     hi:SetTexture(TEX.categoryHi)
-    hi:SetVertexColor(1, 1, 1, 0.85)
+    hi:SetVertexColor(1, 1, 1, 0.70)
     hi:Hide()
     btn.highlight = hi
     btn:SetScript("OnMouseDown", function()
@@ -2792,13 +3010,14 @@ function LeafVE_AchTest.UI:Build()
     end)
     btn:SetScript("OnEnter", function()
       if this.filterValue ~= LeafVE_AchTest.UI.selectedCategory then
-        this:SetBackdropColor(0.20, 0.15, 0.08, 0.70)
-        if this.highlight then this.highlight:Show() end
+        if this.highlight then
+          this.highlight:SetVertexColor(1, 1, 1, 0.55)
+          this.highlight:Show()
+        end
       end
     end)
     btn:SetScript("OnLeave", function()
       if this.filterValue ~= LeafVE_AchTest.UI.selectedCategory then
-        this:SetBackdropColor(0, 0, 0, 0)
         if this.highlight then this.highlight:Hide() end
       end
     end)
@@ -2945,7 +3164,7 @@ function LeafVE_AchTest.UI:Build()
     local hi = btn:CreateTexture(nil, "BACKGROUND")
     hi:SetAllPoints(btn)
     hi:SetTexture(TEX.categoryHi)
-    hi:SetVertexColor(1, 1, 1, 0.85)
+    hi:SetVertexColor(1, 1, 1, 0.70)
     hi:Hide()
     btn.highlight = hi
     btn:SetScript("OnMouseDown", function()
@@ -2954,13 +3173,14 @@ function LeafVE_AchTest.UI:Build()
     end)
     btn:SetScript("OnEnter", function()
       if this.filterValue ~= LeafVE_AchTest.UI.titleCategoryFilter then
-        this:SetBackdropColor(0.20, 0.15, 0.08, 0.70)
-        if this.highlight then this.highlight:Show() end
+        if this.highlight then
+          this.highlight:SetVertexColor(1, 1, 1, 0.55)
+          this.highlight:Show()
+        end
       end
     end)
     btn:SetScript("OnLeave", function()
       if this.filterValue ~= LeafVE_AchTest.UI.titleCategoryFilter then
-        this:SetBackdropColor(0, 0, 0, 0)
         if this.highlight then this.highlight:Hide() end
       end
     end)
@@ -2977,11 +3197,11 @@ function LeafVE_AchTest.UI:Build()
   contentArt:SetPoint("TOPLEFT", f, "TOPLEFT", 158, -152)
   contentArt:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -26, 12)
   contentArt:SetTexture(TEX.parchmentH)
-  contentArt:SetVertexColor(0.75, 0.75, 0.75, 0.35)
+  contentArt:SetVertexColor(0.88, 0.86, 0.80, 0.88)
   self.contentArt = contentArt
   
   local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-  scrollChild:SetWidth(700)
+  scrollChild:SetWidth(710)
   scrollChild:SetHeight(1)
   scrollFrame:SetScrollChild(scrollChild)
   self.scrollChild = scrollChild
@@ -3108,11 +3328,12 @@ function LeafVE_AchTest.UI:Refresh()
     if self.categoryButtons then
       for _, btn in ipairs(self.categoryButtons) do
         if btn.filterValue == self.selectedCategory then
-          btn:SetBackdropColor(0.16, 0.45, 0.14, 0.70)
-          if btn.highlight then btn.highlight:Show() end
+          if btn.highlight then
+            btn.highlight:SetVertexColor(1, 1, 1, 0.88)
+            btn.highlight:Show()
+          end
           btn.label:SetTextColor(THEME.leaf[1], THEME.leaf[2], THEME.leaf[3])
         else
-          btn:SetBackdropColor(0, 0, 0, 0)
           if btn.highlight then btn.highlight:Hide() end
           btn.label:SetTextColor(0.92, 0.78, 0.26)
         end
@@ -3155,11 +3376,12 @@ function LeafVE_AchTest.UI:Refresh()
     if self.titleCategoryButtons then
       for _, btn in ipairs(self.titleCategoryButtons) do
         if btn.filterValue == self.titleCategoryFilter then
-          btn:SetBackdropColor(0.16, 0.45, 0.14, 0.70)
-          if btn.highlight then btn.highlight:Show() end
+          if btn.highlight then
+            btn.highlight:SetVertexColor(1, 1, 1, 0.88)
+            btn.highlight:Show()
+          end
           btn.label:SetTextColor(THEME.leaf[1], THEME.leaf[2], THEME.leaf[3])
         else
-          btn:SetBackdropColor(0, 0, 0, 0)
           if btn.highlight then btn.highlight:Hide() end
           btn.label:SetTextColor(0.92, 0.78, 0.26)
         end
@@ -3266,7 +3488,7 @@ function LeafVE_AchTest.UI:UpdateVisibleAchievements()
 
     frame.icon:SetTexture(ach.data.icon)
     if ach.completed then
-      if frame.rowBg then frame.rowBg:SetVertexColor(1.0, 1.0, 1.0, 0.90) end
+      if frame.rowBg then frame.rowBg:SetVertexColor(1.0, 1.0, 1.0, 0.96) end
       frame.icon:SetDesaturated(false)
       frame.icon:SetAlpha(1)
       frame.checkmark:Show()
@@ -3286,7 +3508,7 @@ function LeafVE_AchTest.UI:UpdateVisibleAchievements()
       frame.emblem:SetAlpha(1)
       frame.points:SetText("|cFFFFD433"..ach.data.points.."|r")
     else
-      if frame.rowBg then frame.rowBg:SetVertexColor(0.78, 0.78, 0.78, 0.72) end
+      if frame.rowBg then frame.rowBg:SetVertexColor(0.70, 0.70, 0.70, 0.78) end
       frame.icon:SetDesaturated(true)
       frame.icon:SetAlpha(0.5)
       frame.checkmark:Hide()
@@ -3343,7 +3565,7 @@ function LeafVE_AchTest.UI:RefreshTitles()
     local earned = LeafVE_AchTest:HasAchievement(me, titleData.achievement)
     if not frame then
       frame = CreateFrame("Frame", nil, self.scrollChild)
-      frame:SetWidth(680)
+      frame:SetWidth(690)
       frame:SetHeight(55)
       frame:SetBackdrop({
         bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -3351,13 +3573,13 @@ function LeafVE_AchTest.UI:RefreshTitles()
         tile = true, tileSize = 16, edgeSize = 8,
         insets = {left = 2, right = 2, top = 2, bottom = 2}
       })
-      frame:SetBackdropColor(0.11, 0.10, 0.09, 0.90)
+      frame:SetBackdropColor(0.08, 0.07, 0.06, 0.96)
       frame:SetBackdropBorderColor(0.34, 0.28, 0.20, 0.92)
       local rowBg = frame:CreateTexture(nil, "BACKGROUND")
       rowBg:SetPoint("TOPLEFT", frame, "TOPLEFT", 2, -2)
       rowBg:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -2, 2)
       rowBg:SetTexture(TEX.parchmentH)
-      rowBg:SetVertexColor(0.95, 0.95, 0.95, 0.82)
+      rowBg:SetVertexColor(0.92, 0.90, 0.86, 0.94)
       frame.rowBg = rowBg
       local icon = frame:CreateTexture(nil, "ARTWORK")
       icon:SetWidth(32)
@@ -3427,7 +3649,7 @@ function LeafVE_AchTest.UI:RefreshTitles()
     local achData = ACHIEVEMENTS[titleData.achievement]
     frame.icon:SetTexture(titleData.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
     if earned then
-      if frame.rowBg then frame.rowBg:SetVertexColor(1.0, 1.0, 1.0, 0.90) end
+      if frame.rowBg then frame.rowBg:SetVertexColor(1.0, 1.0, 1.0, 0.96) end
       local isLeg = titleData.legendary
       local br = isLeg and {1,0,0} or {THEME.leaf[1],THEME.leaf[2],THEME.leaf[3]}
       frame:SetBackdropBorderColor(br[1], br[2], br[3], 0.84)
@@ -3459,7 +3681,7 @@ function LeafVE_AchTest.UI:RefreshTitles()
         end)
       end
     else
-      if frame.rowBg then frame.rowBg:SetVertexColor(0.78, 0.78, 0.78, 0.72) end
+      if frame.rowBg then frame.rowBg:SetVertexColor(0.70, 0.70, 0.70, 0.78) end
       frame:SetBackdropBorderColor(0.32, 0.27, 0.20, 0.82)
       frame.icon:SetDesaturated(true)
       frame.icon:SetAlpha(0.3)
@@ -3526,6 +3748,40 @@ taxiFrame:SetScript("OnEvent", function()
   end
 end)
 
+local ahHooksInstalled = false
+local function InstallAuctionHooks()
+  if ahHooksInstalled then return end
+  ahHooksInstalled = true
+
+  if StartAuction then
+    local oldStartAuction = StartAuction
+    StartAuction = function(minBid, buyoutPrice, bidAmount, runTime, stackSize, numStacks)
+      oldStartAuction(minBid, buyoutPrice, bidAmount, runTime, stackSize, numStacks)
+      if LeafVE_AchTest and LeafVE_AchTest.initialized then
+        local me = ShortName(UnitName("player"))
+        if me then
+          IncrCounter(me, "ahPosts")
+          LeafVE_AchTest:CheckAuctionHouseAchievements()
+        end
+      end
+    end
+  end
+
+  if PlaceAuctionBid then
+    local oldPlaceAuctionBid = PlaceAuctionBid
+    PlaceAuctionBid = function(listType, index, bid)
+      oldPlaceAuctionBid(listType, index, bid)
+      if LeafVE_AchTest and LeafVE_AchTest.initialized then
+        local me = ShortName(UnitName("player"))
+        if me then
+          IncrCounter(me, "ahBids")
+          LeafVE_AchTest:CheckAuctionHouseAchievements()
+        end
+      end
+    end
+  end
+end
+
 local ef = CreateFrame("Frame")
 ef:RegisterEvent("ADDON_LOADED")
 ef:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -3544,10 +3800,16 @@ ef:RegisterEvent("QUEST_FINISHED")
 ef:RegisterEvent("QUEST_LOG_UPDATE")
 ef:RegisterEvent("PARTY_MEMBERS_CHANGED")
 ef:RegisterEvent("CHAT_MSG_SYSTEM")
+ef:RegisterEvent("UPDATE_FACTION")
+ef:RegisterEvent("AUCTION_HOUSE_SHOW")
+ef:RegisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
+ef:RegisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
+ef:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
 
 ef:SetScript("OnEvent", function()
   if event == "ADDON_LOADED" and arg1 == LeafVE_AchTest.name then
     EnsureDB()
+    InstallAuctionHooks()
     -- Backlog: award completions from previously stored boss kill progress + history
     LeafVE_AchTest:CheckBacklogAchievements()
     Print("Achievement System Loaded! Type /achtest")
@@ -3561,6 +3823,10 @@ ef:SetScript("OnEvent", function()
     LeafVE_AchTest:CheckProfessionAchievements(true)
     LeafVE_AchTest:CheckQuestAchievements(true)
     LeafVE_AchTest:CheckPvPRankAchievements(true)
+    LeafVE_AchTest:CheckReputationAchievements(true)
+    LeafVE_AchTest:CheckBattlegroundAchievements(true)
+    LeafVE_AchTest:CheckAuctionHouseAchievements(true)
+    LeafVE_AchTest:CheckRunMilestoneAchievements(true)
     LeafVE_AchTest:CheckGuildRankAchievements(true)
     LeafVE_AchTest:CheckBacklogAchievements()
     LeafVE_AchTest.initialized = true
@@ -3571,6 +3837,18 @@ ef:SetScript("OnEvent", function()
   end
   if event == "PLAYER_LEVEL_UP" and LeafVE_AchTest.initialized then LeafVE_AchTest:CheckLevelAchievements() end
   if event == "PLAYER_MONEY" and LeafVE_AchTest.initialized then LeafVE_AchTest:CheckGoldAchievements() end
+  if event == "UPDATE_FACTION" and LeafVE_AchTest.initialized then LeafVE_AchTest:CheckReputationAchievements() end
+  if event == "AUCTION_HOUSE_SHOW" and LeafVE_AchTest.initialized then
+    local me = ShortName(UnitName("player"))
+    if me then
+      IncrCounter(me, "ahVisits")
+      LeafVE_AchTest:CheckAuctionHouseAchievements()
+    end
+  end
+  if (event == "CHAT_MSG_BG_SYSTEM_ALLIANCE" or event == "CHAT_MSG_BG_SYSTEM_HORDE" or event == "CHAT_MSG_BG_SYSTEM_NEUTRAL")
+    and LeafVE_AchTest.initialized then
+    LeafVE_AchTest:HandleBattlegroundSystemMessage(event, arg1 or "")
+  end
   if event == "CHAT_MSG_COMBAT_HOSTILE_DEATH" then
     -- Boss kill tracking only; generic kills are handled by LeafVE_Ach_Kills.lua.
     local msg = arg1 or ""
