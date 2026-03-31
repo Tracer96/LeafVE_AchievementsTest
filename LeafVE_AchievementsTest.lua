@@ -714,6 +714,13 @@ local ACHIEVEMENTS = {
   legendary_onyxia_5={id="legendary_onyxia_5",name="Onyxia 5-Man",desc="Defeat Onyxia with a group of exactly 5 players. Must be streamed or recorded and approved by an officer.",category="Legendary",points=1000,icon="Interface\\Icons\\INV_Misc_Head_Dragon_Black",manual=true},
   legendary_solo_60_boss={id="legendary_solo_60_boss",name="Solo Dungeon Boss",desc="Defeat any level 60 dungeon boss completely alone. Must be streamed or recorded and approved by an officer.",category="Legendary",points=1000,icon="Interface\\Icons\\Spell_Holy_BlessingOfStrength",manual=true},
   legendary_no_consumes_t2plus={id="legendary_no_consumes_t2plus",name="No Consumables Raid",desc="Complete a full Tier 2 or higher raid without any raid member using a single consumable. Must be streamed or recorded and approved by two officers.",category="Legendary",points=1000,icon="Interface\\Icons\\INV_Potion_01",manual=true},
+  item_ironfoe_weilder={id="item_ironfoe_weilder",name="Ironfoe Weilder",desc="Take up Ironfoe, the hammer of impossible fortune, and let the halls of Blackrock ring with every crushing blow.",category="Elite",points=125,icon="Interface\\Icons\\INV_Hammer_11"},
+  item_sulfuras_weilder={id="item_sulfuras_weilder",name="Sulfuras Weilder",desc="Wield Sulfuras, Hand of Ragnaros, and carry the furnace-heart of the Firelord into battle.",category="Elite",points=200,icon="Interface\\Icons\\INV_Hammer_Unique_Sulfuras"},
+  item_thunderfury_weilder={id="item_thunderfury_weilder",name="Thunderfury Weilder",desc="Draw Thunderfury, Blessed Blade of the Windseeker, and answer battle with storm, speed, and legend.",category="Elite",points=200,icon="Interface\\Icons\\INV_Sword_39"},
+  item_atiesh_weilder={id="item_atiesh_weilder",name="Atiesh Weilder",desc="Raise Atiesh, Greatstaff of the Guardian, and inherit a fragment of Azeroth's oldest arcane burden.",category="Elite",points=200,icon="Interface\\Icons\\INV_Staff_Medivh"},
+  item_ashbringer_weilder={id="item_ashbringer_weilder",name="Ashbringer Weilder",desc="Wield Ashbringer and bear a blade feared by the damned and revered by the righteous.",category="Elite",points=200,icon="Interface\\Icons\\INV_Sword_2H_Ashbringer"},
+  item_modragzan_heart_of_the_mountain={id="item_modragzan_heart_of_the_mountain",name="Heart of the Mountain",desc="Take up Modrag'zan, Heart of the Mountain, and wield a weapon hewn from the will of the deep places of Blackrock.",category="Elite",points=140,icon="Interface\\Icons\\INV_Hammer_19"},
+  item_arms_of_thaurissan_big_bonkers={id="item_arms_of_thaurissan_big_bonkers",name="Arms of the Thaurissan - Big Bonkers",desc="Claim both Ironfoe and Modrag'zan, Heart of the Mountain, and bring the full wrath of Dark Iron royalty to both hands.",category="Elite",points=260,icon="Interface\\Icons\\INV_Hammer_25",criteria_type="ach_meta",criteria_ids={"item_ironfoe_weilder","item_modragzan_heart_of_the_mountain"}},
 
   -- Guild Rank Achievements (awarded based on in-game guild rank)
   guild_rank_jonin={id="guild_rank_jonin",name="Jonin",desc="Awarded when promoted to Jonin (core raider).",category="Guild",points=50,icon="Interface\\Icons\\Spell_Holy_BlessingOfStrength",manual=true},
@@ -795,6 +802,13 @@ local TITLES = {
   {id="title_warbanner",name="the Warbanner",achievement="pvp_bg_all_100",prefix=false,category="Elite",icon="Interface\\Icons\\INV_Banner_02"},
   {id="title_unbroken",name="the Unbroken",achievement="pvp_duel_streak_25",prefix=false,category="Elite",icon="Interface\\Icons\\INV_Sword_62"},
   {id="title_grand_battlemaster",name="the Battlemaster",achievement="pvp_bg_win_250",prefix=false,category="Elite",icon="Interface\\Icons\\INV_BannerPVP_02"},
+  {id="title_ironfoe",name="the Ironfoe",achievement="item_ironfoe_weilder",prefix=false,category="Elite",icon="Interface\\Icons\\INV_Hammer_11"},
+  {id="title_flamebearer",name="the Flamebearer",achievement="item_sulfuras_weilder",prefix=false,category="Elite",icon="Interface\\Icons\\INV_Hammer_Unique_Sulfuras"},
+  {id="title_windforged",name="the Windforged",achievement="item_thunderfury_weilder",prefix=false,category="Elite",icon="Interface\\Icons\\INV_Sword_39"},
+  {id="title_guardians_successor",name="the Guardian's Successor",achievement="item_atiesh_weilder",prefix=false,category="Elite",icon="Interface\\Icons\\INV_Staff_Medivh"},
+  {id="title_ashen",name="the Ashen",achievement="item_ashbringer_weilder",prefix=false,category="Elite",icon="Interface\\Icons\\INV_Sword_2H_Ashbringer"},
+  {id="title_mountains_heart",name="the Mountain's Heart",achievement="item_modragzan_heart_of_the_mountain",prefix=false,category="Elite",icon="Interface\\Icons\\INV_Hammer_19"},
+  {id="title_big_bonker",name="the Big Bonker",achievement="item_arms_of_thaurissan_big_bonkers",prefix=false,category="Elite",icon="Interface\\Icons\\INV_Hammer_25"},
 
   
   -- PvP Titles
@@ -1264,7 +1278,7 @@ local ACHIEVEMENT_PROGRESS_DEF = {
   gold_1000 = {api="gold", goal=1000},
   gold_5000 = {api="gold", goal=5000},
   gold_50000 = {api="gold", goal=50000},
-  -- Quests: prefer GetNumQuestsCompleted(), fall back to tracked counter
+  -- Quests: use the higher of GetNumQuestsCompleted() and tracked counter
   casual_quest_100  = {api="quests", counter="quests", goal=100},
   casual_quest_500  = {api="quests", counter="quests", goal=500},
   casual_quest_1000 = {api="quests", counter="quests", goal=1000},
@@ -1407,13 +1421,24 @@ local function GetAchievementProgress(me, achId)
     if last and cur > last then total = total + (cur - last) end
     current = total
   elseif def.api == "quests" then
-    -- Prefer the server-side total (available via GetNumQuestsCompleted in Turtle WoW)
+    -- Use the highest known value to tolerate API/client inconsistencies.
+    local pc = LeafVE_AchTest_DB and LeafVE_AchTest_DB.progressCounters
+    local pme = pc and pc[me]
+    local tracked = (pme and pme[def.counter]) or 0
+    local apiTotal = nil
     if GetNumQuestsCompleted then
-      current = GetNumQuestsCompleted() or 0
+      apiTotal = tonumber(GetNumQuestsCompleted())
+    end
+    if apiTotal and apiTotal > tracked then
+      current = apiTotal
+      if me then
+        if not LeafVE_AchTest_DB.progressCounters[me] then
+          LeafVE_AchTest_DB.progressCounters[me] = {}
+        end
+        LeafVE_AchTest_DB.progressCounters[me][def.counter] = apiTotal
+      end
     else
-      local pc = LeafVE_AchTest_DB and LeafVE_AchTest_DB.progressCounters
-      local pme = pc and pc[me]
-      current = (pme and pme[def.counter]) or 0
+      current = tracked
     end
   end
 
@@ -1504,18 +1529,22 @@ function LeafVE_AchTest:AddTitle(titleData)
   table.insert(TITLES, titleData)
 end
 
--- Check and award quest-count achievements using GetNumQuestsCompleted() or the stored counter
+-- Check and award quest-count achievements using the highest reliable known total.
 function LeafVE_AchTest:CheckQuestAchievements(silent)
   local me = ShortName(UnitName("player"))
   if not me then return end
   EnsureDB()
   local pc = LeafVE_AchTest_DB.progressCounters[me]
   local streak = (pc and pc.questsSinceDeath) or 0
-  local total
+  local trackedTotal = (pc and pc.quests) or 0
+  local total = trackedTotal
+  local apiTotal = nil
   if GetNumQuestsCompleted then
-    total = GetNumQuestsCompleted() or 0
-  else
-    total = (pc and pc.quests) or 0
+    apiTotal = tonumber(GetNumQuestsCompleted())
+  end
+  if apiTotal and apiTotal > total then
+    total = apiTotal
+    SetCounter(me, "quests", apiTotal)
   end
   if total >= 100  then self:AwardAchievement("casual_quest_100",  silent) end
   if total >= 500  then self:AwardAchievement("casual_quest_500",  silent) end
@@ -1602,34 +1631,97 @@ function LeafVE_AchTest:CheckBattlegroundAchievements(silent)
   CheckBattlegroundAchievementsForPlayer(me, silent)
 end
 
+local lastBattlegroundWinSignature = nil
+local lastBattlegroundWinTime = 0
+local BATTLEGROUND_WIN_DEDUPE_WINDOW = 5
+
+local function MessageDeclaresFactionVictory(lowerMsg, factionKey)
+  if not lowerMsg or lowerMsg == "" then return false end
+  if factionKey == "alliance" then
+    return string.find(lowerMsg, "the alliance wins", 1, true)
+      or string.find(lowerMsg, "alliance wins", 1, true)
+      or string.find(lowerMsg, "alliance victory", 1, true)
+      or string.find(lowerMsg, "the alliance has won", 1, true)
+      or string.find(lowerMsg, "alliance has won", 1, true)
+      or string.find(lowerMsg, "the alliance is victorious", 1, true)
+      or string.find(lowerMsg, "victory for the alliance", 1, true)
+      or string.find(lowerMsg, "victory to the alliance", 1, true)
+  elseif factionKey == "horde" then
+    return string.find(lowerMsg, "the horde wins", 1, true)
+      or string.find(lowerMsg, "horde wins", 1, true)
+      or string.find(lowerMsg, "horde victory", 1, true)
+      or string.find(lowerMsg, "the horde has won", 1, true)
+      or string.find(lowerMsg, "horde has won", 1, true)
+      or string.find(lowerMsg, "the horde is victorious", 1, true)
+      or string.find(lowerMsg, "victory for the horde", 1, true)
+      or string.find(lowerMsg, "victory to the horde", 1, true)
+  end
+  return false
+end
+
+local function ResolveBattlegroundType(msg)
+  local lower = string.lower(msg or "")
+  if string.find(lower, "warsong gulch", 1, true) then return "WSG" end
+  if string.find(lower, "arathi basin", 1, true) then return "AB" end
+  if string.find(lower, "alterac valley", 1, true) then return "AV" end
+
+  local zone = ""
+  if GetRealZoneText then
+    zone = string.lower(GetRealZoneText() or "")
+  elseif GetZoneText then
+    zone = string.lower(GetZoneText() or "")
+  end
+  local subZone = string.lower((GetSubZoneText and GetSubZoneText()) or "")
+
+  if string.find(zone, "warsong gulch", 1, true) or string.find(subZone, "warsong gulch", 1, true) then
+    return "WSG"
+  end
+  if string.find(zone, "arathi basin", 1, true) or string.find(subZone, "arathi basin", 1, true) then
+    return "AB"
+  end
+  if string.find(zone, "alterac valley", 1, true) or string.find(subZone, "alterac valley", 1, true) then
+    return "AV"
+  end
+  return nil
+end
+
 function LeafVE_AchTest:HandleBattlegroundSystemMessage(evt, msg)
   local me = ShortName(UnitName("player"))
   if not me then return end
   local faction = UnitFactionGroup and UnitFactionGroup("player") or nil
+  local lower = string.lower(msg or "")
   local isWin = false
 
   if evt == "CHAT_MSG_BG_SYSTEM_ALLIANCE" then
-    isWin = (faction == "Alliance")
+    isWin = (faction == "Alliance") and MessageDeclaresFactionVictory(lower, "alliance")
   elseif evt == "CHAT_MSG_BG_SYSTEM_HORDE" then
-    isWin = (faction == "Horde")
+    isWin = (faction == "Horde") and MessageDeclaresFactionVictory(lower, "horde")
   elseif evt == "CHAT_MSG_BG_SYSTEM_NEUTRAL" then
-    local lower = string.lower(msg or "")
     if faction == "Alliance" then
-      isWin = string.find(lower, "alliance") and (string.find(lower, "wins") or string.find(lower, "victory"))
+      isWin = MessageDeclaresFactionVictory(lower, "alliance")
     elseif faction == "Horde" then
-      isWin = string.find(lower, "horde") and (string.find(lower, "wins") or string.find(lower, "victory"))
+      isWin = MessageDeclaresFactionVictory(lower, "horde")
     end
   end
 
   if not isWin then return end
 
+  local bgType = ResolveBattlegroundType(msg)
+  local now = GetTime and GetTime() or 0
+  local signature = tostring(bgType or "BG") .. "|" .. lower
+  if now > 0 and lastBattlegroundWinSignature == signature
+     and (now - lastBattlegroundWinTime) <= BATTLEGROUND_WIN_DEDUPE_WINDOW then
+    return
+  end
+  lastBattlegroundWinSignature = signature
+  lastBattlegroundWinTime = now
+
   IncrCounter(me, "bgWins")
-  local lower = string.lower(msg or "")
-  if string.find(lower, "warsong gulch") then
+  if bgType == "WSG" then
     IncrCounter(me, "bgWinsWSG")
-  elseif string.find(lower, "arathi basin") then
+  elseif bgType == "AB" then
     IncrCounter(me, "bgWinsAB")
-  elseif string.find(lower, "alterac valley") then
+  elseif bgType == "AV" then
     IncrCounter(me, "bgWinsAV")
   end
   CheckBattlegroundAchievementsForPlayer(me)
@@ -1951,6 +2043,47 @@ local LEGENDARY_GUILD_MESSAGES = {
   legendary_no_consumes_t2plus = function(name) return name .. " completed a Tier 2+ raid without a single consumable used by anyone. Pure skill, no potions. They are |cFFFF0000the Pure Mortal|r!" end,
 }
 
+local EQUIPPED_ITEM_ACHIEVEMENTS = {
+  [11684] = "item_ironfoe_weilder",
+  [13262] = "item_ashbringer_weilder",
+  [17182] = "item_sulfuras_weilder",
+  [17802] = "item_thunderfury_weilder",
+  [19019] = "item_thunderfury_weilder",
+  [22589] = "item_atiesh_weilder",
+  [22630] = "item_atiesh_weilder",
+  [22631] = "item_atiesh_weilder",
+  [22632] = "item_atiesh_weilder",
+  [22737] = "item_atiesh_weilder",
+}
+
+local EQUIPPED_ITEM_ACHIEVEMENTS_BY_NAME = {
+  ["modrag'zan, heart of the mountain"] = "item_modragzan_heart_of_the_mountain",
+}
+
+local EQUIPPED_ITEM_GUILD_MESSAGES = {
+  item_ironfoe_weilder = function(name, achLink, titleText)
+    return name .. " has defied the odds, walked the forgotten road beneath Blackrock Mountain, and claimed " .. achLink .. ". Henceforth, they shall forever be known as " .. titleText .. "!"
+  end,
+  item_sulfuras_weilder = function(name, achLink, titleText)
+    return name .. " has braved fire, legend, and the will of a Firelord to claim " .. achLink .. ". From this day onward, they shall forever be known as " .. titleText .. "!"
+  end,
+  item_thunderfury_weilder = function(name, achLink, titleText)
+    return name .. " has sought the path less traveled, bound storm to steel, and seized " .. achLink .. ". Let all who hear it know they shall forever be known as " .. titleText .. "!"
+  end,
+  item_atiesh_weilder = function(name, achLink, titleText)
+    return name .. " has reclaimed " .. achLink .. ", a staff spoken of only in reverent whispers. By right of burden and brilliance, they shall forever be known as " .. titleText .. "!"
+  end,
+  item_ashbringer_weilder = function(name, achLink, titleText)
+    return name .. " has stepped into holy myth itself and taken up " .. achLink .. ". The wicked tremble, for they shall forever be known as " .. titleText .. "!"
+  end,
+  item_modragzan_heart_of_the_mountain = function(name, achLink, titleText)
+    return name .. " has wrested " .. achLink .. " from the deep wrath of the mountain and now bears Blackrock's fury in hand. They shall forever be known as " .. titleText .. "!"
+  end,
+  item_arms_of_thaurissan_big_bonkers = function(name, achLink, titleText)
+    return name .. " has united Ironfoe and Modrag'zan, Heart of the Mountain, and claimed " .. achLink .. ". Dark Iron thunder answers both hands, and they shall forever be known as " .. titleText .. "!"
+  end,
+}
+
 local GUILD_RANK_GUILD_MESSAGES = {
   guild_rank_jonin  = function(name) return name .. " has proven their strength and risen to the rank of Jonin. The Will of Fire burns bright within them!" end,
   guild_rank_anbu   = function(name) return name .. " has been chosen to serve in the shadows. They now walk among the elite as Anbu — protectors of the village!" end,
@@ -1964,7 +2097,7 @@ local function NormalizeGrantAchievementId(rawAchId)
   if ACHIEVEMENTS[achId] then return achId end
   local prefixes = {
     "dung_","raid_","explore_","casual_","elite_",
-    "pvp_","gold_","prof_","guild_rank_","legendary_","lvl_",
+    "pvp_","gold_","prof_","guild_rank_","legendary_","lvl_","item_","rp_",
   }
   for _, prefix in ipairs(prefixes) do
     local candidate = prefix..achId
@@ -1996,15 +2129,44 @@ local function BuildAdminAchievementOptions()
   return options
 end
 
+local function GetAchievementRewardTitle(achId)
+  for _, titleData in ipairs(TITLES) do
+    if titleData.achievement == achId then
+      return titleData
+    end
+  end
+  return nil
+end
+
+local function FormatAchievementTitleText(playerName, titleData)
+  if not titleData then
+    return "|cFFFF7F00"..playerName.."|r"
+  end
+  if titleData.prefix then
+    return "|cFFFF7F00"..titleData.name.." "..playerName.."|r"
+  end
+  return "|cFFFF7F00"..playerName.." "..titleData.name.."|r"
+end
+
 local function BuildGuildAchievementMessage(playerName, achId, ach)
   local achLink = "|cFFFFD700|Hleafve_ach:"..achId.."|h["..ach.name.."]|h|r"
+  if EQUIPPED_ITEM_GUILD_MESSAGES[achId] then
+    local titleData = GetAchievementRewardTitle(achId)
+    local titleText = FormatAchievementTitleText(playerName, titleData)
+    return "|cFF2DD35C[LeafVE Achievement]|r " .. EQUIPPED_ITEM_GUILD_MESSAGES[achId](playerName, achLink, titleText)
+  end
   if ach.category == "Legendary" and LEGENDARY_GUILD_MESSAGES[achId] then
     return "|cFFFF0000[LEGENDARY]|r " .. LEGENDARY_GUILD_MESSAGES[achId](playerName)
   end
   if ach.category == "Guild" and GUILD_RANK_GUILD_MESSAGES[achId] then
     return "|cFF8B4513[GUILD RANK]|r " .. GUILD_RANK_GUILD_MESSAGES[achId](playerName)
   end
-  return "|cFF2DD35C[LeafVE Achievement]|r earned "..achLink
+  local currentTitle = LeafVE_AchTest and LeafVE_AchTest.GetCurrentTitle and LeafVE_AchTest:GetCurrentTitle(playerName)
+  if currentTitle then
+    local titleColor = currentTitle.legendary and "|cFFFF0000" or (currentTitle.guild and "|cFF8B4513" or "|cFFFF7F00")
+    return titleColor.."["..currentTitle.name.."]|r |cFF2DD35C[LeafVE Achievement]|r has earned "..achLink
+  end
+  return "|cFF2DD35C[LeafVE Achievement]|r has earned "..achLink
 end
 
 function LeafVE_AchTest:AdminGrantAchievement(targetInput, achInput, requireGuildMember)
@@ -2069,27 +2231,7 @@ function LeafVE_AchTest:AwardAchievement(achievementID, silent)
 
     -- Guild announcement — achievement name is a clickable hyperlink
     if IsInGuild() then
-      local currentTitle = self:GetCurrentTitle(me)
-      local achLink = "|cFFFFD700|Hleafve_ach:"..achievementID.."|h["..achievement.name.."]|h|r"
-      local guildMsg = ""
-
-      -- Special legendary announcement with unique flavor text
-      if achievement.category == "Legendary" and LEGENDARY_GUILD_MESSAGES[achievementID] then
-        local legendaryMsg = LEGENDARY_GUILD_MESSAGES[achievementID](me)
-        guildMsg = "|cFFFF0000[LEGENDARY]|r " .. legendaryMsg
-      -- Special guild rank announcement with unique Naruto flavor text
-      elseif achievement.category == "Guild" and GUILD_RANK_GUILD_MESSAGES[achievementID] then
-        local rankMsg = GUILD_RANK_GUILD_MESSAGES[achievementID](me)
-        guildMsg = "|cFF8B4513[GUILD RANK]|r " .. rankMsg
-      else
-        -- Normal achievement announcement
-        if currentTitle then
-          local titleColor = currentTitle.legendary and "|cFFFF0000" or (currentTitle.guild and "|cFF8B4513" or "|cFFFF7F00")
-          guildMsg = titleColor..currentTitle.name.."]|r |cFF2DD35C[LeafVE Achievement]|r has earned "..achLink
-        else
-          guildMsg = "|cFF2DD35C[LeafVE Achievement]|r has earned "..achLink
-        end
-      end
+      local guildMsg = BuildGuildAchievementMessage(me, achievementID, achievement)
 
       -- Use original SendChatMessage to avoid adding title twice
       if originalSendChatMessage then
@@ -2316,6 +2458,34 @@ function LeafVE_AchTest:CheckCachedProgressAchievements(silent)
   for achId in pairs(ACHIEVEMENT_PROGRESS_DEF) do
     local p = GetAchievementProgress(me, achId)
     if p and p.current and p.goal and p.current >= p.goal then
+      self:AwardAchievement(achId, silent)
+    end
+  end
+end
+
+local function GetItemIdFromLink(link)
+  local itemId = smatch(link or "", "item:(%d+)")
+  if itemId then return tonumber(itemId) end
+  return nil
+end
+
+local function GetItemNameFromLink(link)
+  return smatch(link or "", "%[(.-)%]")
+end
+
+function LeafVE_AchTest:CheckEquipmentAchievements(silent)
+  if not GetInventoryItemLink then return end
+  local awarded = {}
+  for slot = 1, 19 do
+    local link = GetInventoryItemLink("player", slot)
+    local itemId = GetItemIdFromLink(link)
+    local achId = itemId and EQUIPPED_ITEM_ACHIEVEMENTS[itemId]
+    if not achId then
+      local itemName = GetItemNameFromLink(link)
+      achId = itemName and EQUIPPED_ITEM_ACHIEVEMENTS_BY_NAME[string.lower(itemName)]
+    end
+    if achId and not awarded[achId] then
+      awarded[achId] = true
       self:AwardAchievement(achId, silent)
     end
   end
@@ -3484,6 +3654,7 @@ function LeafVE_AchTest.UI:Build()
     {display="Gold",           filter="Gold"},
     {display="Elite",          filter="Elite"},
     {display="Casual",         filter="Casual"},
+    {display="Roleplay",       filter="Roleplay"},
     {display="Kills",          filter="Kills"},
     {display="Identity",       filter="Identity"},
     {display="Reputation",     filter="Reputation"},
@@ -3649,6 +3820,7 @@ function LeafVE_AchTest.UI:Build()
     {display="Gold",         filter="Gold"},
     {display="Exploration",  filter="Exploration"},
     {display="Casual",       filter="Casual"},
+    {display="Roleplay",     filter="Roleplay"},
     {display="Quests",       filter="Quests"},
     {display="Legendary",    filter="Legendary"},
   }
@@ -4242,9 +4414,53 @@ local BOSS_TARGET_WINDOW = 30  -- seconds
 local recentTargets = {}       -- lowercase mob name -> last-targeted timestamp
 -- Quest log snapshot: used to diff on QUEST_FINISHED to detect actual turn-ins.
 local questLogSnapshot = {}
+local lastQuestTurnInTime = 0
+local lastQuestTurnInName = nil
+local QUEST_TURNIN_DEDUPE_WINDOW = 0.75
+local QUEST_TURNIN_ANY_WINDOW = 0.20
 -- Manual taxi state tracking (UnitOnTaxi does not exist in vanilla 1.12).
 local isOnTaxi = false
 local taxiMapJustClosed = false
+
+local function ExtractCompletedQuestName(msg)
+  if type(msg) ~= "string" then return nil end
+  local name = smatch(msg, 'Quest "([^"]+)" completed%.')
+           or smatch(msg, "Quest '([^']+)' completed%.")
+  if not name or name == "" then return nil end
+  return Trim(name)
+end
+
+local function RecordQuestTurnIn(me, questName)
+  if not me then return false end
+  local now = GetTime and GetTime() or 0
+  local lname = ""
+  if type(questName) == "string" and questName ~= "" then
+    lname = string.lower(Trim(questName))
+  end
+
+  if now > 0 then
+    local sinceLast = now - lastQuestTurnInTime
+    local sameName = (lname ~= "" and lastQuestTurnInName == lname)
+    if sinceLast <= QUEST_TURNIN_ANY_WINDOW then
+      return false
+    end
+    if sameName and sinceLast <= QUEST_TURNIN_DEDUPE_WINDOW then
+      return false
+    end
+    lastQuestTurnInTime = now
+    if lname ~= "" then
+      lastQuestTurnInName = lname
+    end
+  end
+
+  IncrCounter(me, "quests")
+  local streak = IncrCounter(me, "questsSinceDeath")
+  if streak >= 200 then
+    LeafVE_AchTest:AwardAchievement("casual_quest_streak_200")
+  end
+  LeafVE_AchTest:CheckQuestAchievements()
+  return true
+end
 
 -- Taxi state frame: tracks TAXIMAP_CLOSED + control events to detect flight paths.
 local taxiFrame = CreateFrame("Frame")
@@ -4348,6 +4564,7 @@ ef:RegisterEvent("AUCTION_HOUSE_SHOW")
 ef:RegisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
 ef:RegisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
 ef:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
+ef:RegisterEvent("UNIT_INVENTORY_CHANGED")
 
 ef:SetScript("OnEvent", function()
   if event == "ADDON_LOADED" and arg1 == LeafVE_AchTest.name then
@@ -4374,6 +4591,7 @@ ef:SetScript("OnEvent", function()
     LeafVE_AchTest:CheckCachedProgressAchievements(true)
     LeafVE_AchTest:CheckExplorationAchievements(true)
     LeafVE_AchTest:CheckGuildRankAchievements(true)
+    LeafVE_AchTest:CheckEquipmentAchievements(true)
     LeafVE_AchTest:CheckBacklogAchievements()
     LeafVE_AchTest:CheckAchievementMetaAchievements(true)
     do
@@ -4414,6 +4632,9 @@ ef:SetScript("OnEvent", function()
   end
   if event == "PLAYER_MONEY" and LeafVE_AchTest.initialized then LeafVE_AchTest:CheckGoldAchievements() end
   if event == "UPDATE_FACTION" and LeafVE_AchTest.initialized then LeafVE_AchTest:CheckReputationAchievements() end
+  if event == "UNIT_INVENTORY_CHANGED" and arg1 == "player" and LeafVE_AchTest.initialized then
+    LeafVE_AchTest:CheckEquipmentAchievements()
+  end
   if event == "AUCTION_HOUSE_SHOW" and LeafVE_AchTest.initialized then
     local me = ShortName(UnitName("player"))
     if me then
@@ -4530,19 +4751,16 @@ ef:SetScript("OnEvent", function()
         end
       end
       local questTurnedIn = false
+      local turnedInTitle = nil
       for title in pairs(questLogSnapshot) do
         if not currentLog[title] then
           questTurnedIn = true
+          turnedInTitle = title
           break
         end
       end
       if questTurnedIn then
-        IncrCounter(me, "quests")
-        local streak = IncrCounter(me, "questsSinceDeath")
-        if streak >= 200 then
-          LeafVE_AchTest:AwardAchievement("casual_quest_streak_200")
-        end
-        LeafVE_AchTest:CheckQuestAchievements()
+        RecordQuestTurnIn(me, turnedInTitle)
       end
       questLogSnapshot = currentLog
     end
@@ -4568,6 +4786,13 @@ ef:SetScript("OnEvent", function()
   end
   if event == "CHAT_MSG_SYSTEM" then
     local msg = arg1 or ""
+    local completedQuestName = ExtractCompletedQuestName(msg)
+    if completedQuestName then
+      local me = ShortName(UnitName("player"))
+      if me then
+        RecordQuestTurnIn(me, completedQuestName)
+      end
+    end
     local winner, loser = smatch(msg, "^(.-) has defeated (.+) in a duel$")
     if winner then
       local me = ShortName(UnitName("player"))
@@ -4728,6 +4953,7 @@ local mountCastPending      = false
 local mountCastPendingTime  = 0
 local mountAwardedThisCast  = false
 local pendingMountIsEpic    = false
+local pendingMountSpellName = nil
 -- Maximum seconds between a mount SPELLCAST_START and SPELLCAST_STOP to count as a successful cast.
 local MOUNT_CAST_WINDOW = 5
 
@@ -4775,6 +5001,22 @@ local function IsEpicMountSpell(nameLower)
   return false
 end
 
+local CLASS_MOUNT_QUEST_BACKFILL = {
+  ["summon dreadsteed"] = "Dreadsteed of Xoroth",
+  ["summon charger"] = "Charger",
+}
+
+local function BackfillClassMountQuest(spellName, silent)
+  if not spellName or spellName == "" then return end
+  if not LeafVE_AchTest or not LeafVE_AchTest.EnsureQuestCompletion then return end
+  local me = ShortName(UnitName("player"))
+  if not me then return end
+  local questName = CLASS_MOUNT_QUEST_BACKFILL[string.lower(spellName)]
+  if questName then
+    LeafVE_AchTest.EnsureQuestCompletion(me, questName, silent)
+  end
+end
+
 local spellFrame = CreateFrame("Frame")
 spellFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 -- Vanilla 1.12 cast events (fire for the local player only; no unit ID in arg1).
@@ -4786,6 +5028,7 @@ spellFrame:SetScript("OnEvent", function()
   if event == "UNIT_SPELLCAST_SUCCEEDED" then
     if arg1 ~= "player" then return end
     local spellName = arg2 or ""
+    BackfillClassMountQuest(spellName, false)
     if string.find(spellName, "^Hearthstone") then
       local me = ShortName(UnitName("player"))
       if me then
@@ -4822,6 +5065,7 @@ spellFrame:SetScript("OnEvent", function()
       mountCastPendingTime = GetTime()
       mountAwardedThisCast = false
       pendingMountIsEpic   = isEpicMount
+      pendingMountSpellName = spellName
       Debug("SPELLCAST_START: mount spell detected: "..(arg1 or ""))
     end
 
@@ -4849,16 +5093,19 @@ spellFrame:SetScript("OnEvent", function()
         if pendingMountIsEpic then
           LeafVE_AchTest:AwardAchievement("casual_epic_mount")
         end
+        BackfillClassMountQuest(pendingMountSpellName, false)
         Debug("SPELLCAST_STOP: mount awarded")
       end
       mountAwardedThisCast = true
       mountCastPending     = false
+      pendingMountSpellName = nil
     end
 
   elseif event == "SPELLCAST_INTERRUPTED" or event == "SPELLCAST_FAILED" then
     pendingHearthstoneStart = 0
     mountCastPending        = false
     pendingMountIsEpic      = false
+    pendingMountSpellName   = nil
     fishingCastPending      = false
     fishingBobberActive     = false
     Debug("SPELLCAST_INTERRUPTED/FAILED: mount cast cancelled")

@@ -242,14 +242,24 @@ local QUEST_CHAINS = {
   {
     id     = "quest_mc_attunement",
     name   = "Attunement to the Core",
-    desc   = "Complete the Molten Core attunement quest chain.",
+    desc   = "Complete Attunement to the Core, or enter Molten Core while already attuned from an earlier era.",
     points = 75,
     icon   = "Interface\\Icons\\Spell_Fire_LavaSpawn",
     title  = {id="title_core_seeker", name="Core Seeker", prefix=false},
     steps  = {
-      "Fireproof",
-      "Overmaster Pyron",
       "Attunement to the Core",
+    },
+  },
+
+  -- Blackwing Lair Attunement
+  {
+    id     = "quest_bwl_attunement",
+    name   = "Blackhand's Command",
+    desc   = "Complete Blackhand's Command, or enter Blackwing Lair while already attuned from an earlier era.",
+    points = 75,
+    icon   = "Interface\\Icons\\INV_Misc_Head_Dragon_Black",
+    steps  = {
+      "Blackhand's Command",
     },
   },
 
@@ -274,7 +284,7 @@ local QUEST_CHAINS = {
   {
     id     = "quest_dreadsteed",
     name   = "Dreadsteed of Xoroth",
-    desc   = "Complete the Warlock epic mount quest chain and summon the Dreadsteed.",
+    desc   = "Complete the Warlock epic mount quest chain, or summon your Dreadsteed if the rite was finished before the addon ever knew your name.",
     points = 100,
     icon   = "Interface\\Icons\\Ability_Mount_Nightmarehorse",
     title  = {id="title_dreadlord", name="the Dreadlord", prefix=false},
@@ -292,7 +302,7 @@ local QUEST_CHAINS = {
   {
     id     = "quest_charger",
     name   = "Blessed Charger",
-    desc   = "Complete the Paladin epic mount quest chain and receive the Charger.",
+    desc   = "Complete the Paladin epic mount quest chain, or summon your Charger if the blessing was earned long before the addon was installed.",
     points = 100,
     icon   = "Interface\\Icons\\Spell_Holy_SealOfWrath",
     title  = {id="title_lightsworn", name="the Lightsworn", prefix=false},
@@ -842,6 +852,37 @@ local function CheckChain(me, chain, silent)
   LeafVE_AchTest:AwardAchievement(chain.id, silent)
 end
 
+local function EnsureQuestCompletion(me, questName, silent)
+  if not me or not questName or questName == "" then return end
+  if not LeafVE_AchTest_DB then return end
+
+  local key = NormalizeQuestKey(questName)
+  if not key or not TRACKED_STEPS[key] then return end
+
+  if not LeafVE_AchTest_DB.completedQuests then LeafVE_AchTest_DB.completedQuests = {} end
+  if not LeafVE_AchTest_DB.completedQuests[me] then LeafVE_AchTest_DB.completedQuests[me] = {} end
+
+  local completed = LeafVE_AchTest_DB.completedQuests[me]
+  if ReadQuestCount(completed[key]) < 1 then
+    completed[key] = 1
+  end
+
+  local legacyKey = LegacyQuestKey(questName)
+  if legacyKey and legacyKey ~= key and ReadQuestCount(completed[legacyKey]) < 1 then
+    completed[legacyKey] = 1
+  end
+
+  local chains = STEP_TO_CHAINS[key]
+  if not chains then return end
+  for _, chain in ipairs(chains) do
+    CheckChain(me, chain, silent)
+  end
+end
+
+if LeafVE_AchTest then
+  LeafVE_AchTest.EnsureQuestCompletion = EnsureQuestCompletion
+end
+
 -- Record a quest completion and check impacted chains.
 local function RecordQuestCompletion(me, questName)
   if not me or not questName or questName == "" then return end
@@ -870,6 +911,33 @@ local function RecordQuestCompletion(me, questName)
   if not chains then return end
   for _, chain in ipairs(chains) do
     CheckChain(me, chain)
+  end
+end
+
+local ATTN_ZONE_BACKFILL = {
+  ["Molten Core"] = "Attunement to the Core",
+  ["Blackwing Lair"] = "Blackhand's Command",
+}
+
+local function GetCurrentZoneName()
+  if GetRealZoneText then
+    local zone = GetRealZoneText()
+    if zone and zone ~= "" then return zone end
+  end
+  if GetZoneText then
+    local zone = GetZoneText()
+    if zone and zone ~= "" then return zone end
+  end
+  return ""
+end
+
+local function CheckRaidAttunementBackfill(silent)
+  local me = LeafVE_AchTest and LeafVE_AchTest.ShortName and LeafVE_AchTest.ShortName(UnitName("player"))
+  if not me then return end
+  local zoneName = GetCurrentZoneName()
+  local questName = ATTN_ZONE_BACKFILL[zoneName]
+  if questName then
+    EnsureQuestCompletion(me, questName, silent)
   end
 end
 
@@ -909,11 +977,16 @@ end
 local questFrame = CreateFrame("Frame")
 questFrame:RegisterEvent("ADDON_LOADED")
 questFrame:RegisterEvent("CHAT_MSG_SYSTEM")
+questFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+questFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+questFrame:RegisterEvent("ZONE_CHANGED")
+questFrame:RegisterEvent("ZONE_CHANGED_INDOORS")
 
 questFrame:SetScript("OnEvent", function()
   if event == "ADDON_LOADED" and arg1 == "LeafVE_AchievementsTest" then
     if LeafVE_AchTest then
       LeafVE_AchTest.NormalizeQuestStepKey = NormalizeQuestKey
+      LeafVE_AchTest.EnsureQuestCompletion = EnsureQuestCompletion
     end
     if LeafVE_AchTest and LeafVE_AchTest.AddAchievement then
       RegisterQuestChainAchievements()
@@ -938,5 +1011,11 @@ questFrame:SetScript("OnEvent", function()
         RecordQuestCompletion(me, questName)
       end
     end
+  elseif event == "PLAYER_ENTERING_WORLD" then
+    CheckRaidAttunementBackfill(true)
+  elseif event == "ZONE_CHANGED_NEW_AREA"
+    or event == "ZONE_CHANGED"
+    or event == "ZONE_CHANGED_INDOORS" then
+    CheckRaidAttunementBackfill(false)
   end
 end)

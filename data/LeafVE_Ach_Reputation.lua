@@ -36,6 +36,7 @@ local FACTIONS = {
   -- Raid/Instance
   {id="zandalari",     name="Zandalar Tribe",   icon="Interface\\Icons\\INV_Misc_Idol_02"},
   {id="ahnqiraj",      name="Brood of Nozdormu",icon="Interface\\Icons\\INV_Qiraj_JewelBlessed"},
+  {id="wardensoftime", name="Wardens of Time",  icon="Interface\\Icons\\INV_Misc_PocketWatch_01", aliases={"Keepers of Time"}},
   {id="scarlet",       name="Scarlet Crusade",  icon="Interface\\Icons\\Spell_Holy_PowerWordShield"},
   {id="defias",        name="Syndicate",        icon="Interface\\Icons\\INV_Misc_EngGizmos_19"},
 }
@@ -78,6 +79,11 @@ end
 local FACTION_LOOKUP = {}
 for _, f in ipairs(FACTIONS) do
   FACTION_LOOKUP[string.lower(f.name)] = f
+  if f.aliases then
+    for _, alias in ipairs(f.aliases) do
+      FACTION_LOOKUP[string.lower(alias)] = f
+    end
+  end
 end
 
 local function CheckReputationMilestones()
